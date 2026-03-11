@@ -1,9 +1,8 @@
 import mongoose from "mongoose";
-import { isStrongPassword } from "validator";
-import isEmail from "validator/lib/isEmail";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { ENV } from "../config/env";
+import { ENV } from "../config/env.js";
+import validator from "validator";
 
 const userSchema = new mongoose.Schema(
   {
@@ -15,7 +14,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       validate: {
-        validate: (value) => isEmail(value),
+        validator: (value) => validator.isEmail(value),
         message: "Email format is not valid",
       },
     },
@@ -23,7 +22,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       validate: {
-        validate: (value) => isStrongPassword(value),
+        validator: (value) => validator.isStrongPassword(value),
         message: "password is not strong",
       },
     },
@@ -33,7 +32,7 @@ const userSchema = new mongoose.Schema(
     },
     location: {
       type: String,
-      required: true,
+      // required: true,
     },
     refreshToken: {
       type: String,
@@ -47,15 +46,10 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 userSchema.methods.generateAccessToken = function () {
