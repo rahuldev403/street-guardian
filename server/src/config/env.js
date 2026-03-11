@@ -2,4 +2,7 @@ import "dotenv/config";
 
 export const ENV = {
   port: process.env.PORT,
+  jwt_access_secret: process.env.JWT_ACCESS_SECRET,
+  jwt_refresh_secret: process.env.JWT_REFRESH_SECRET,
+  node_env: process.env.NODE_ENV,
 };
