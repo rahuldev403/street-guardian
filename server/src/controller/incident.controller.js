@@ -4,7 +4,9 @@ import ApiError from "../utils/ApiError.js";
 import {
   createIncidentService,
   getAllIncidentsService,
+  getIncidentByIdService,
 } from "../services/incident.service.js";
+import mongoose from "mongoose";
 
 export const createIncident = asyncHandler(async (req, res) => {
   const { title, description, location, type, severity, media } = req.body;
@@ -85,4 +87,19 @@ export const getAllIncidents = asyncHandler(async (req, res) => {
       "Incidents fetched successfully",
     ),
   );
+});
+
+export const getIncidentById = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Not a valid id");
+  }
+  const incidentById = await getIncidentByIdService(id);
+
+  if (incidentById === null || incidentById === undefined) {
+    throw new ApiError(404, "Incident not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, incidentById, "Incident fetched successfully"));
 });

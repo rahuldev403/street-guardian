@@ -20,3 +20,8 @@ export const getAllIncidentsService = async (
   const totalCount = await Incident.countDocuments(filterObj);
   return { incidents: allIncidents, totalCount };
 };
+
+export const getIncidentByIdService = async (id) => {
+  const incident = await Incident.findById(id).populate("reportedBy", "name email");
+  return incident;
+};
