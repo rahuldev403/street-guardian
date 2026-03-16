@@ -8,6 +8,7 @@ import {
   upvoteAndValidate,
 } from "../services/incident.service.js";
 import mongoose from "mongoose";
+import { getIO } from "../sockets/socket.js";
 
 export const createIncident = asyncHandler(async (req, res) => {
   const { title, description, location, type, severity, media } = req.body;
@@ -42,6 +43,11 @@ export const createIncident = asyncHandler(async (req, res) => {
   };
 
   const incident = await createIncidentService(incidentData);
+  try {
+    getIO().emit("incident-created", incident);
+  } catch (error) {
+    console.error("incident emit failed", error);
+  }
   return res
     .status(201)
     .json(new ApiResponse(201, incident, "Incident created successfully"));
