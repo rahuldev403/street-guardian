@@ -8,19 +8,17 @@ import {
   upvoteAndValidate,
 } from "../services/incident.service.js";
 import mongoose from "mongoose";
-import { getIO } from "../sockets/socket.js";
+import { emitIncidentNearby } from "../sockets/socket.js";
+import { categorizeIncidentDescription } from "../services/ai.service.js";
 
 export const createIncident = asyncHandler(async (req, res) => {
-  const { title, description, location, type, severity, media } = req.body;
+  const { title, description, location, media } = req.body;
   const user = req.user;
   if (!user) {
     throw new ApiError(401, "Authentication required");
   }
-  if (!title || !description || !location || !type) {
-    throw new ApiError(
-      400,
-      "Title, description, location, and type are required",
-    );
+  if (!title || !description || !location) {
+    throw new ApiError(400, "Title, description, and location are required");
   }
 
   if (!location.coordinates || location.coordinates.length !== 2) {
@@ -29,6 +27,9 @@ export const createIncident = asyncHandler(async (req, res) => {
       "Location must have valid coordinates [longitude, latitude]",
     );
   }
+
+  const aiResult = await categorizeIncidentDescription(description);
+
   const incidentData = {
     title,
     description,
@@ -36,15 +37,16 @@ export const createIncident = asyncHandler(async (req, res) => {
       type: "Point",
       coordinates: location.coordinates,
     },
-    type,
-    severity: severity || "controllable",
+    type: aiResult.type,
+    severity: aiResult.severity,
+    summary: aiResult.summary,
     reportedBy: user._id,
     media: media || null,
   };
 
   const incident = await createIncidentService(incidentData);
   try {
-    getIO().emit("incident-created", incident);
+    emitIncidentNearby(incident);
   } catch (error) {
     console.error("incident emit failed", error);
   }

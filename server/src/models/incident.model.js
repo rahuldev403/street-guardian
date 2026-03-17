@@ -23,7 +23,18 @@ const incidentSchema = new mongoose.Schema(
     },
     type: {
       type: String,
+      enum: [
+        "theft",
+        "accident",
+        "harassment",
+        "damaged-property",
+        "suspicious-activity",
+        "other",
+      ],
       required: true,
+    },
+    summary: {
+      type: String,
     },
     severity: {
       type: String,
@@ -34,6 +45,7 @@ const incidentSchema = new mongoose.Schema(
     reportedBy: {
       type: mongoose.Types.ObjectId,
       ref: "User",
+      required: true,
     },
     media: {
       type: String,

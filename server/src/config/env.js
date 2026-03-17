@@ -9,4 +9,5 @@ export const ENV = {
   db_url: process.env.MONGO_URL,
   email_user: process.env.EMAIL_USER,
   email_password: process.env.EMAIL_PASSWORD,
+  gemini_key: process.env.GEMINI_API_KEY,
 };
