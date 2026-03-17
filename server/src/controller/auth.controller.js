@@ -60,7 +60,10 @@ export const signUp = asyncHandler(async (req, res) => {
   let user;
   if (existingUser) {
     if (existingUser.isVerified) {
-      throw new ApiError(409, "An account with this email already exists. Please sign in.");
+      throw new ApiError(
+        409,
+        "An account with this email already exists. Please sign in.",
+      );
     }
     user = existingUser;
     user.name = name;
@@ -291,13 +294,14 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   }
   const otp = generateOTP();
   const hashedOTP = hashOtp(otp);
-  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-  user.otp = hashedOTP;
-  user.otpExpiry = otpExpiry;
-  user.otpPurpose = "password-reset";
-  user.otpAttempts = 0;
-  await user.save({ validateBeforeSave: false });
+  await OTP.deleteMany({ email: normalizedEmail, purpose: "password-reset" });
+
+  await OTP.create({
+    email: normalizedEmail,
+    otp: hashedOTP,
+    purpose: "password-reset",
+  });
 
   await sendOtpEmail(normalizedEmail, otp, "password-reset");
 
@@ -325,41 +329,46 @@ export const resetPassword = asyncHandler(async (req, res) => {
   if (!validator.isStrongPassword(newPassword)) {
     throw new ApiError(400, "Password is not strong enough");
   }
-  const user = await User.findOne({
+  const user = await User.findOne({ email: normalizedEmail });
+  const otpRecord = await OTP.findOne({
     email: normalizedEmail,
-    otpPurpose: "password-reset",
+    purpose: "password-reset",
   });
 
-  if (!user) {
+  if (!user || !otpRecord) {
     throw new ApiError(404, "Invalid request");
   }
-  if (user.otpAttempts >= 5) {
+  if (otpRecord.attempts >= 5) {
+    await OTP.deleteOne({ _id: otpRecord._id });
     throw new ApiError(
       429,
       "Too many failed attempts. Please request a new password reset.",
     );
   }
-  if (isOTPExpired(user.otpExpiry)) {
+
+  const otpAgeMs = Date.now() - new Date(otpRecord.createdAt).getTime();
+  if (otpAgeMs > 10 * 60 * 1000) {
+    await OTP.deleteOne({ _id: otpRecord._id });
     throw new ApiError(
       400,
       "OTP has expired. Please request a new password reset.",
     );
   }
-  if (!verifyOTP(otp, user.otp)) {
-    user.otpAttempts += 1;
-    await user.save({ validateBeforeSave: false });
+
+  if (!verifyOTP(otp, otpRecord.otp)) {
+    otpRecord.attempts += 1;
+    await otpRecord.save();
     throw new ApiError(
       400,
-      `Invalid OTP. ${5 - user.otpAttempts} attempts remaining.`,
+      `Invalid OTP. ${5 - otpRecord.attempts} attempts remaining.`,
     );
   }
+
   user.password = newPassword;
-  user.otp = undefined;
-  user.otpExpiry = undefined;
-  user.otpPurpose = undefined;
-  user.otpAttempts = 0;
   user.refreshToken = undefined;
   await user.save();
+
+  await OTP.deleteOne({ _id: otpRecord._id });
 
   return res
     .status(200)

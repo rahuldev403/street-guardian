@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, ArrowRight, RotateCcw, AlertCircle } from "lucide-react";
 import { useAuthStore } from "../store/AuthStore";
 
+const RESEND_COOLDOWN = 30;
+
 const VerifyOtpForm = ({ onSuccess, onBackToLogin }) => {
   const [otp, setOtp] = useState("");
+  const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
+  const timerRef = useRef(null);
 
   const verifySignupOtp = useAuthStore((s) => s.verifySignupOtp);
   const resendSignupOtp = useAuthStore((s) => s.resendSignupOtp);
@@ -12,6 +16,25 @@ const VerifyOtpForm = ({ onSuccess, onBackToLogin }) => {
   const isLoading = useAuthStore((s) => s.isLoading);
   const error = useAuthStore((s) => s.error);
   const clearError = useAuthStore((s) => s.clearError);
+
+  useEffect(() => {
+    startCountdown();
+    return () => clearInterval(timerRef.current);
+  }, []);
+
+  const startCountdown = () => {
+    clearInterval(timerRef.current);
+    setCountdown(RESEND_COOLDOWN);
+    timerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,7 +45,8 @@ const VerifyOtpForm = ({ onSuccess, onBackToLogin }) => {
 
   const handleResend = async () => {
     clearError();
-    await resendSignupOtp();
+    const result = await resendSignupOtp();
+    if (result.success) startCountdown();
   };
 
   return (
@@ -75,11 +99,11 @@ const VerifyOtpForm = ({ onSuccess, onBackToLogin }) => {
         <button
           type="button"
           onClick={handleResend}
-          disabled={isLoading}
-          className="flex items-center gap-1.5 text-xs text-white/38 transition hover:text-white/68 disabled:opacity-50"
+          disabled={isLoading || countdown > 0}
+          className="flex items-center gap-1.5 text-xs text-white/38 transition hover:text-white/68 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <RotateCcw className="h-3 w-3" />
-          Resend code
+          {countdown > 0 ? `Resend code in ${countdown}s` : "Resend code"}
         </button>
 
         <div className="mt-auto">

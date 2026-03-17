@@ -97,6 +97,42 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  forgotPassword: async (email) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const res = await api.post("/auth/forgot-password", { email });
+      set({ isLoading: false });
+      return {
+        success: true,
+        message: res?.data?.message || "Reset code sent successfully",
+      };
+    } catch (error) {
+      set({ isLoading: false, error: getErrorMessage(error) });
+      return { success: false };
+    }
+  },
+
+  resetPassword: async ({ email, otp, newPassword }) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const res = await api.post("/auth/reset-password", {
+        email,
+        otp,
+        newPassword,
+      });
+      set({ isLoading: false });
+      return {
+        success: true,
+        message: res?.data?.message || "Password reset successful",
+      };
+    } catch (error) {
+      set({ isLoading: false, error: getErrorMessage(error) });
+      return { success: false };
+    }
+  },
+
   fetchMe: async () => {
     set({ isBootstrapping: true });
 
@@ -136,7 +172,6 @@ export const useAuthStore = create((set, get) => ({
   },
 }));
 
-// Standalone state reset — imported by api.js interceptor to avoid circular hook usage
 export const clearAuthState = () =>
   useAuthStore.setState({
     user: null,

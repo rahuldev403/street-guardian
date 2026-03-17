@@ -21,11 +21,12 @@ const authLimiter = rateLimit({
 
 const authRoute = express.Router();
 
-
 authRoute.post("/signup", signUp);
 authRoute.post("/verify-registration", verifyRegistrationOTP);
 authRoute.post("/forgot-password", forgotPassword);
 authRoute.post("/reset-password", resetPassword);
+// authRoute.put("/reset-password", resetPassword);
+authRoute.patch("/reset-password", resetPassword);
 authRoute.post("/resend-otp", resendOTP);
 authRoute.post("/signin", authLimiter, signIn);
 authRoute.post("/refresh", refresh);
