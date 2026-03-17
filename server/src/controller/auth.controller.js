@@ -37,13 +37,14 @@ export const refresh = asyncHandler(async (req, res) => {
     .cookie("accessToken", newAccessToken, accessTokenOptions)
     .json(new ApiResponse(200, null, "accesstoken refresh successfull"));
 });
-export const sigUp = asyncHandler(async (req, res) => {
+
+export const signUp = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
   const normalizedEmail = String(email || "")
     .trim()
     .toLowerCase();
   if (!name || !email || !password) {
-    throw new ApiError(401, "All feilds are required");
+    throw new ApiError(400, "All fields are required");
   }
   if (!validator.isEmail(normalizedEmail)) {
     throw new ApiError(400, "Email is not valid");
@@ -58,6 +59,9 @@ export const sigUp = asyncHandler(async (req, res) => {
 
   let user;
   if (existingUser) {
+    if (existingUser.isVerified) {
+      throw new ApiError(409, "An account with this email already exists. Please sign in.");
+    }
     user = existingUser;
     user.name = name;
     user.password = password;
@@ -71,10 +75,8 @@ export const sigUp = asyncHandler(async (req, res) => {
     });
   }
 
-  // Delete any existing OTP for this email and purpose
   await OTP.deleteMany({ email: normalizedEmail, purpose: "signup" });
 
-  // Create new OTP entry with TTL
   await OTP.create({
     email: normalizedEmail,
     otp: hashedOtp,
@@ -140,7 +142,6 @@ export const verifyRegistrationOTP = asyncHandler(async (req, res) => {
     );
   }
 
-  // OTP verified successfully
   user.isVerified = true;
 
   const accessToken = user.generateAccessToken();

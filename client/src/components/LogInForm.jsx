@@ -1,14 +1,22 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
+import { useAuthStore } from "../store/AuthStore";
 
-const LogInForm = ({ onSwitchToSignup }) => {
+const LogInForm = ({ onSwitchToSignup, onSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
 
-  const handleSubmit = (e) => {
+  const login = useAuthStore((s) => s.login);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const error = useAuthStore((s) => s.error);
+  const clearError = useAuthStore((s) => s.clearError);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: connect to auth API
+    clearError();
+    const result = await login(form);
+    if (result.success) onSuccess?.();
   };
 
   return (
@@ -58,23 +66,32 @@ const LogInForm = ({ onSwitchToSignup }) => {
           </button>
         </div>
 
-        <div className="flex justify-end">
-          <button
-            type="button"
-            className="text-xs font-medium text-primary/70 transition hover:text-primary"
-          >
-            Forgot password?
-          </button>
-        </div>
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18 }}
+              className="flex items-start gap-2"
+            >
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400" />
+              <div>
+                <p className="text-xs  text-red-400">{error}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="mt-auto">
           <motion.button
             type="submit"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:shadow-primary/35"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:shadow-primary/35 disabled:opacity-70"
           >
-            Sign In
+            {isLoading ? "Signing In..." : "Sign In"}
             <ArrowRight className="h-4 w-4" />
           </motion.button>
         </div>

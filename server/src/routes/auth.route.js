@@ -3,7 +3,7 @@ import {
   refresh,
   signIn,
   signOut,
-  sigUp,
+  signUp,
   verifyRegistrationOTP,
   forgotPassword,
   resetPassword,
@@ -21,7 +21,8 @@ const authLimiter = rateLimit({
 
 const authRoute = express.Router();
 
-authRoute.post("/signup", sigUp);
+
+authRoute.post("/signup", signUp);
 authRoute.post("/verify-registration", verifyRegistrationOTP);
 authRoute.post("/forgot-password", forgotPassword);
 authRoute.post("/reset-password", resetPassword);

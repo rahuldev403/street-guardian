@@ -16,7 +16,7 @@ export const sendOTPEmail = async (email, otp, purpose) => {
   }[purpose];
 
   const message = {
-    singup: `Your verification code is: ${otp}. This code will expire in 10 minutes.`,
+    signup: `Your verification code is: ${otp}. This code will expire in 10 minutes.`,
     "password-reset": `Your password reset code is: ${otp}. This code will expire in 10 minutes.`,
   }[purpose];
 

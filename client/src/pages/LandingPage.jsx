@@ -2,6 +2,7 @@ import { ArrowRight, ArrowUp, Clock3, Github, Radar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import AuthModal from "../components/AuthModal";
+import { useAuthStore } from "../store/AuthStore";
 
 const featureCards = [
   {
@@ -114,6 +115,10 @@ function LandingPage() {
   const [showTop, setShowTop] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
 
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const logout = useAuthStore((s) => s.logout);
+
   useEffect(() => {
     const onScroll = () =>
       setShowTop(window.scrollY > window.innerHeight * 0.8);
@@ -184,15 +189,30 @@ function LandingPage() {
               </p>
 
               <div className="mt-5 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
-                <motion.button
-                  onClick={() => setShowAuth(true)}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-xl shadow-primary/25 transition hover:shadow-primary/35 sm:px-6 sm:py-3.5"
-                >
-                  Get Started
-                  <ArrowRight className="h-4 w-4" />
-                </motion.button>
+                {isAuthenticated ? (
+                  <div className="inline-flex items-center gap-3">
+                    <span className="text-sm text-white/80">
+                      Hi, {user?.name}
+                    </span>
+                    <button
+                      onClick={logout}
+                      className="inline-flex items-center justify-center rounded-2xl border border-white/12 bg-white/6 px-5 py-3 text-sm font-semibold text-white/86"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <motion.button
+                    onClick={() => setShowAuth(true)}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-xl shadow-primary/25 transition hover:shadow-primary/35 sm:px-6 sm:py-3.5"
+                  >
+                    Get Started
+                    <ArrowRight className="h-4 w-4" />
+                  </motion.button>
+                )}
+                {/*  */}
                 <motion.a
                   href="#features"
                   whileHover={{ scale: 1.03 }}

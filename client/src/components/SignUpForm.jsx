@@ -1,14 +1,29 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  ArrowRight,
+  AlertCircle,
+} from "lucide-react";
+import { useAuthStore } from "../store/AuthStore";
 
 const SignUpForm = ({ onSwitchToLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
 
-  const handleSubmit = (e) => {
+  const signup = useAuthStore((s) => s.signup);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const error = useAuthStore((s) => s.error);
+  const clearError = useAuthStore((s) => s.clearError);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: connect to auth API
+    clearError();
+    await signup(form);
   };
 
   return (
@@ -70,26 +85,32 @@ const SignUpForm = ({ onSwitchToLogin }) => {
           </button>
         </div>
 
-        <p className="text-[11px] leading-5 text-white/32">
-          By signing up you agree to our{" "}
-          <span className="cursor-pointer text-primary/65 transition hover:text-primary">
-            Terms of Service
-          </span>{" "}
-          and{" "}
-          <span className="cursor-pointer text-primary/65 transition hover:text-primary">
-            Privacy Policy
-          </span>
-          .
-        </p>
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18 }}
+              className="flex items-start gap-2"
+            >
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400" />
+              <div>
+                <p className="text-xs  text-red-400">{error}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="mt-auto">
           <motion.button
             type="submit"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:shadow-primary/35"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:shadow-primary/35 disabled:opacity-70"
           >
-            Create Account
+            {isLoading ? "Creating..." : "Create Account"}
             <ArrowRight className="h-4 w-4" />
           </motion.button>
         </div>
