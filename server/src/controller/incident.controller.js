@@ -99,7 +99,6 @@ export const getAllIncidents = asyncHandler(async (req, res) => {
   if (type) filterObj.type = type;
   const result = await getAllIncidentsService(
     filterObj,
-    pageNum,
     limitNum,
     skip,
     sortBy,

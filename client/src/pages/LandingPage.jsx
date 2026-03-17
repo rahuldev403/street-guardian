@@ -1,6 +1,7 @@
 import { ArrowRight, ArrowUp, Clock3, Github, Radar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AuthModal from "../components/AuthModal";
 import { useAuthStore } from "../store/AuthStore";
 
@@ -114,6 +115,7 @@ function SectionReveal({ children, className = "", id }) {
 function LandingPage() {
   const [showTop, setShowTop] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const navigate = useNavigate();
 
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -191,9 +193,15 @@ function LandingPage() {
               <div className="mt-5 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
                 {isAuthenticated ? (
                   <div className="inline-flex items-center gap-3">
-                    <span className="text-sm text-white/80">
-                      Hi, {user?.name}
-                    </span>
+                    <motion.button
+                      onClick={() => navigate("/feed")}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-xl shadow-primary/25 transition hover:shadow-primary/35 sm:px-6 sm:py-3.5"
+                    >
+                      Open Feed
+                      <Radar className="h-4 w-4" />
+                    </motion.button>
                     <button
                       onClick={logout}
                       className="inline-flex items-center justify-center rounded-2xl border border-white/12 bg-white/6 px-5 py-3 text-sm font-semibold text-white/86"
@@ -213,15 +221,17 @@ function LandingPage() {
                   </motion.button>
                 )}
                 {/*  */}
-                <motion.a
-                  href="#features"
+                <motion.button
+                  onClick={() =>
+                    isAuthenticated ? navigate("/feed") : setShowAuth(true)
+                  }
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/6 px-5 py-3 text-sm font-semibold text-white/86 backdrop-blur-xl transition hover:border-white/20 hover:bg-white/10 sm:px-6 sm:py-3.5"
                 >
                   Explore Incidents
                   <Radar className="h-4 w-4" />
-                </motion.a>
+                </motion.button>
               </div>
             </motion.div>
 
@@ -574,12 +584,14 @@ function LandingPage() {
                   local communities move faster when safety matters most.
                 </p>
                 <motion.button
-                  onClick={() => setShowAuth(true)}
+                  onClick={() =>
+                    isAuthenticated ? navigate("/feed") : setShowAuth(true)
+                  }
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
                   className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-slate-950 shadow-lg shadow-white/10"
                 >
-                  Get Started
+                  {isAuthenticated ? "Open Feed" : "Get Started"}
                   <ArrowRight className="h-4 w-4" />
                 </motion.button>
               </div>

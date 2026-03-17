@@ -176,3 +176,23 @@
     hsl(238.7324 83.5294% 66.6667% / 0.65)
   );
 }
+
+/* Leaflet dark theming for feed map */
+.street-guard-map,
+.street-guard-map.leaflet-container {
+  background: #070b14;
+}
+
+.street-guard-map .leaflet-tile-pane {
+  filter: saturate(0.95) brightness(0.9);
+}
+
+.street-guard-map .leaflet-popup-content-wrapper,
+.street-guard-map .leaflet-popup-tip {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.street-guard-map .leaflet-popup-content {
+  margin: 10px 12px;
+}
