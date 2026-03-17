@@ -96,7 +96,6 @@ function ReportPage() {
           );
           setPermissionDenied(true);
         } else if (positionError.code === 3) {
-          // TIMEOUT
           setError("Location request timed out. Please try again.");
           setPermissionDenied(true);
         } else {
