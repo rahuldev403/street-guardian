@@ -9,7 +9,16 @@ const port = ENV.port || 3000;
 const server = http.createServer(app);
 initSocket(server);
 
-server.listen(port, () => {
-  connectDb();
-  console.log(`app is running on - http://localhost:${port}`);
-});
+const startServer = async () => {
+  try {
+    await connectDb();
+    server.listen(port, () => {
+      console.log(`app is running on - http://localhost:${port}`);
+    });
+  } catch (error) {
+    console.error("server start failed:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
